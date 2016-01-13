@@ -286,7 +286,99 @@ namespace cv_3d
         return minAreaRect(cornersV);
     }
 
+void optimizeSphereMotion(sphere &sphereIn, const Mat& motionImage,
+    const Mat& P_l, const Mat& P_r, int k_width, double k_var, bool displayPause)
+{
+    Mat mask_l(Mat::zeros(motionImage.size(), segmentedImageFloat.type()));
+    Mat mask_r(Mat::zeros(segmentedImage.size(), segmentedImageFloat.type()));
 
+        Mat jac_l, jac_r;
+        Mat center_l, center_r;
+        Rect sphereInBox_l = renderSphere(mask_l, sphereIn , P_l, center_l, jac_l);
+
+        Rect sphereInBox_r = renderSphere(mask_r, sphereIn , P_r, center_r, jac_r);
+
+        // update the sphereIn sphere:
+        Point2d pt_l = cv_projective::reprojectPoint(sphereIn.center, P_l, Mat(), Mat(), jac_l);
+        Point2d pt_r = cv_projective::reprojectPoint(sphereIn.center, P_r, Mat(), Mat(), jac_r);
+
+
+        Mat jacFull(4, 3, CV_64FC1);
+        Mat jacFull_l = jacFull.rowRange(0, 2);
+        Mat jacFull_r = jacFull.rowRange(2, 4);
+        jac_l.copyTo(jacFull_l);
+        jac_r.copyTo(jacFull_r);
+
+
+        Mat blurredMask_l;
+        Mat blurredMask_r;
+        Mat ROI_l;
+        Mat ROI_r;
+        int pointOff(k_width);
+        sphereInBox_l -= Point(pointOff, pointOff);
+        sphereInBox_l += Size(2*pointOff, 2*pointOff);
+
+        sphereInBox_r -= Point(pointOff, pointOff);
+        sphereInBox_r += Size(2*pointOff, 2*pointOff);
+
+        ROI_l = mask_l(sphereInBox_l);
+        ROI_r = mask_r(sphereInBox_r);
+
+        GaussianBlur(ROI_l, blurredMask_l, Size(pointOff*2-1, pointOff*2-1), k_var);
+        GaussianBlur(ROI_r, blurredMask_r, Size(pointOff*2-1, pointOff*2-1), k_var);
+        Mat segmentedImageFloat_l = segmentedImageFloat(sphereInBox_l);
+        Mat segmentedImageFloat_r = segmentedImageFloat(sphereInBox_r);
+        Mat weightedMask_l = blurredMask_l.mul(segmentedImageFloat_l);
+        Mat weightedMask_r = blurredMask_r.mul(segmentedImageFloat_r);
+
+        Moments mom_l = moments(weightedMask_l);
+        Moments mom_r = moments(weightedMask_r);
+
+        Mat pointOffsets(4, 1, CV_64FC1);
+        pointOffsets.at<double>(0) = (mom_l.m10/mom_l.m00)+sphereInBox_l.x-pt_l.x;
+        pointOffsets.at<double>(1) = (mom_l.m01/mom_l.m00)+sphereInBox_l.y-pt_l.y;
+
+        pointOffsets.at<double>(2) = (mom_r.m10/mom_r.m00)+sphereInBox_r.x-pt_r.x;
+        pointOffsets.at<double>(3) = (mom_r.m01/mom_r.m00)+sphereInBox_r.y-pt_r.y;
+
+
+        Mat offsetList = jacFull.inv(DECOMP_SVD)*(pointOffsets*0.4);
+
+        Point3d offsetPt(offsetList.at<double>(0), offsetList.at<double>(1), offsetList.at<double>(2));
+
+        // update the sphereIn.
+        sphereIn.center += offsetPt;
+
+
+        if (displayPause)
+        {
+            ROS_INFO("The 2d image offsets are:\n");
+            ROS_INFO_STREAM(pointOffsets);
+
+            ROS_INFO("The full Jacobian is\n");
+            ROS_INFO_STREAM(jacFull);
+
+            ROS_INFO("The final sphere offset (in 3d space) is < %f, %f, %f >\n", offsetPt.x, offsetPt.y, offsetPt.z);
+
+            ROS_INFO("The output sphere position is < %f, %f, %f >\n",
+            sphereIn.center.x, sphereIn.center.y, sphereIn.center.z);
+
+            Mat segDisp_l(segmentedImageFloat_l*(1.0/255.0));
+            Mat segDisp_r(segmentedImageFloat_r*(1.0/255.0));
+            Mat weighDisp_l(weightedMask_l*(1.0/255.0));
+            Mat weighDisp_r(weightedMask_r*(1.0/255.0));
+            imshow("segment_r", segDisp_r);
+            imshow("segment_l", segDisp_l);
+            imshow("weighted_l", weighDisp_l);
+            imshow("weighted_r", weighDisp_r);
+            waitKey(0);
+            destroyWindow("segment_l");
+            destroyWindow("segment_r");
+            destroyWindow("weighted_l");
+            destroyWindow("weighted_r");
+        }
+        return;
+    }
 
 
     void optimizeSphere(sphere &sphereIn, const Mat& segmentedImage,
@@ -299,9 +391,9 @@ namespace cv_3d
 
         Mat jac_l, jac_r;
         Mat center_l, center_r;
-        Rect sphereInBox_l = renderSphere(mask_l, sphereIn , P_l, center_l, jac_l);
+        Rect sphereInBox_l = renderSphere(mask_l, sphereIn, P_l, center_l, jac_l);
 
-        Rect sphereInBox_r = renderSphere(mask_r, sphereIn , P_r, center_r, jac_r);
+        Rect sphereInBox_r = renderSphere(mask_r, sphereIn, P_r, center_r, jac_r);
 
         // update the sphereIn sphere:
         Point2d pt_l = cv_projective::reprojectPoint(sphereIn.center, P_l, Mat(), Mat(), jac_l);
