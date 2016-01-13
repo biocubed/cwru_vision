@@ -388,7 +388,102 @@ namespace cv_3d
         return;
     }
 
+void optimizeSphereMotion(sphere &sphereIn, const Mat& flowImage,
+        const Mat& P_l, const Mat& P_r, int k_width, double k_var, bool displayPause)
+{
+    Mat mask_l(Mat::zeros(segmentedImage.size(), segmentedImageFloat.type()));
+    Mat mask_r(Mat::zeros(segmentedImage.size(), segmentedImageFloat.type()));
 
+    Mat jac_l, jac_r;
+    Mat center_l, center_r;
+    Rect sphereInBox_l = renderSphere(mask_l, sphereIn , P_l, center_l, jac_l);
+    Rect sphereInBox_r = renderSphere(mask_r, sphereIn , P_r, center_r, jac_r);
+
+    // update the sphereIn sphere:
+    Point2d pt_l = cv_projective::reprojectPoint(sphereIn.center, P_l, Mat(), Mat(), jac_l);
+    Point2d pt_r = cv_projective::reprojectPoint(sphereIn.center, P_r, Mat(), Mat(), jac_r);
+
+
+    Mat jacFull(4, 3, CV_64FC1);
+    Mat jacFull_l = jacFull.rowRange(0, 2);
+    Mat jacFull_r = jacFull.rowRange(2, 4);
+    jac_l.copyTo(jacFull_l);
+    jac_r.copyTo(jacFull_r);
+
+
+    Mat blurredMask_l;
+    Mat blurredMask_r;
+    Mat ROI_l;
+    Mat ROI_r;
+    int pointOff(k_width);
+    sphereInBox_l -= Point(pointOff, pointOff);
+    sphereInBox_l += Size(2*pointOff, 2*pointOff);
+
+    sphereInBox_r -= Point(pointOff,pointOff);
+    sphereInBox_r += Size(2*pointOff,2*pointOff);
+
+    ROI_l = mask_l(sphereInBox_l);
+    ROI_r = mask_r(sphereInBox_r);
+
+    Mat flows[2];
+    
+    split(flowImage,flows);
+
+    // GaussianBlur(ROI_l,blurredMask_l,Size(pointOff*2-1,pointOff*2-1),k_var);
+    // GaussianBlur(ROI_r,blurredMask_r,Size(pointOff*2-1,pointOff*2-1),k_var);
+    
+    Mat flow_xl = segmentedImageFloat(sphereInBox_l);
+    Mat flow_xr = segmentedImageFloat(sphereInBox_r);
+    
+    Mat flow_yl = segmentedImageFloat(sphereInBox_l);
+    Mat flow_yr = segmentedImageFloat(sphereInBox_r);
+    
+    Mat flowMask_xl = flow_xl.mul(ROI_l)/255.0;
+    Mat flowMask_yl = flow_yl.mul(ROI_l)/255.0;
+    
+    Mat flowMask_xr = flow_xr.mul(ROI_r)/255.0;
+    Mat flowMask_yr = flow_yr.mul(ROI_r)/255.0;
+    
+    // compute the net offset on the sphere.
+    Scalar leftSphere = sum(ROI_l)/255;
+    Scalar rightSphere = sum(ROI_r)/255;
+    
+    Scalar netFLow_xl = sum(flowMask_xl)/leftSphere;
+    Scalar netFLow_yl = sum(flowMask_yl)/leftSphere;
+    
+    Scalar netFLow_xr = sum(flowMask_xr)/rightSphere;
+    Scalar netFLow_yr = sum(flowMask_yr)/rightSphere;
+
+        Mat pointOffsets(4, 1, CV_64FC1);
+        pointOffsets.at<double>(0) = -netFlow_xl(0);
+        pointOffsets.at<double>(1) = -netFLow_yl(0);
+
+        pointOffsets.at<double>(2) = -netFlow_xr(0);
+        pointOffsets.at<double>(3) = -netFlow_yl(0);
+
+
+        Mat offsetList = jacFull.inv(DECOMP_SVD)*(pointOffsets*0.4);
+
+        Point3d offsetPt(offsetList.at<double>(0), offsetList.at<double>(1), offsetList.at<double>(2));
+
+        // update the sphereIn.
+        sphereIn.center += offsetPt;
+
+        if (displayPause)
+        {
+            ROS_INFO("The 2d image offsets are:\n");
+            ROS_INFO_STREAM(pointOffsets);
+
+            ROS_INFO("The full Jacobian is\n");
+            ROS_INFO_STREAM(jacFull);
+
+            ROS_INFO("The final sphere offset (in 3d space) is < %f, %f, %f >\n", offsetPt.x, offsetPt.y, offsetPt.z);
+
+            ROS_INFO("The output sphere position is < %f, %f, %f >\n",
+            sphereIn.center.x, sphereIn.center.y, sphereIn.center.z);
+        }
+        return;
+}
 
     void optimizeCylinder(cylinder & cylinderIn,
         const Mat & segmentedImage, const Mat& P_l, const Mat&P_r , int k_width, double k_var, bool displayPause )
