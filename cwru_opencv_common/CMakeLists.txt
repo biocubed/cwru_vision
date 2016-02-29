@@ -16,7 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 catkin_package(
     INCLUDE_DIRS include
-    LIBRARIES opencv_ui_lib circle_detection_lib block_detection_lib
+    LIBRARIES opencv_ui_lib circle_detection_lib block_detection_lib grab_cut_lib
     CATKIN_DEPENDS cv_bridge image_transport roscpp sensor_msgs std_msgs
     #   DEPENDS system_lib
 )
@@ -42,6 +42,10 @@ add_library(opencv_3d_lib
     src/opencv_geometry_3d.cpp
 )
 
+add_library(opencv_2d_lib
+    src/opencv_geometry_2d.cpp
+)
+
 add_library(opencv_ui_lib
     src/opencv_ui.cpp
 )
@@ -59,12 +63,25 @@ add_library(projective_lib
 )
 
 
+add_library(grab_cut_lib
+    src/grab_cut.cpp
+)
+
+add_library(color_model_lib
+    src/color_model.cpp
+)
 
 
+target_link_libraries(opencv_3d_lib
+   projective_lib
+   ${OpenCV_LIBRARIES}
+   ${catkin_LIBRARIES}
+ )
 
-
-
-
+target_link_libraries(projective_lib
+   ${OpenCV_LIBRARIES}
+   ${catkin_LIBRARIES}
+ )
 
 #catkin_package(
 #    INCLUDE_DIRS include

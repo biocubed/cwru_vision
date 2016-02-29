@@ -288,7 +288,8 @@ namespace cv_3d
 
 
 
-    void optimizeSphere(sphere &sphereIn, const Mat& segmentedImage,
+
+    double optimizeSphere(sphere &sphereIn, const Mat& segmentedImage,
         const Mat& P_l, const Mat& P_r, int k_width, double k_var, bool displayPause)
     {
         Mat segmentedImageFloat;
@@ -384,7 +385,7 @@ namespace cv_3d
         }
 
      
-        return;
+        return norm(offsetPt);
     }
     
 void optimizeSphereMotion(sphere &sphereIn, const Mat& motionImage,
@@ -484,7 +485,7 @@ void optimizeSphereMotion(sphere &sphereIn, const Mat& motionImage,
         return;
 }
 
-    void optimizeCylinder(cylinder & cylinderIn,
+    double optimizeCylinder(cylinder & cylinderIn,
         const Mat & segmentedImage, const Mat& P_l, const Mat&P_r , int k_width, double k_var, bool displayPause )
     {
         // create a left and right max image.
@@ -684,6 +685,11 @@ void optimizeSphereMotion(sphere &sphereIn, const Mat& motionImage,
 
         // left image update:
 
+        // add a switch in case flipping the eigen vec makes it smaller.
+        if(vec10_l.dot(dirP_l) < 0 )
+        {
+            dirP_l *= -1.0;
+        }
         Point3d omega_l(vec10_l.cross(dirP_l));
         double theta_l(asin(omega_l.z)*rot_gain);
 
@@ -699,7 +705,10 @@ void optimizeSphereMotion(sphere &sphereIn, const Mat& motionImage,
 
 
         // right image:
-
+        if(vec10_r.dot(dirP_r) < 0 )
+        {
+            dirP_r *= -1.0;
+        }
         Point3d omega_r(vec10_r.cross(dirP_r));
         double theta_r(asin(omega_r.z)*rot_gain);
 
@@ -793,20 +802,26 @@ void optimizeSphereMotion(sphere &sphereIn, const Mat& motionImage,
             imshow("segment_r", segDisp_r);
             imshow("segment_l", segDisp_l);
             imshow("weighted_l", weighDisp_l);
-            imshow("weighted_r", weighDisp_r);
-            waitKey(0);
-            destroyWindow("segment_l");
-            destroyWindow("segment_r");
-            destroyWindow("weighted_l");
-            destroyWindow("weighted_r");
-            destroyWindow("segmented_Full");
-      }
+        imshow("weighted_r", weighDisp_r);
+        waitKey(0);
+        destroyWindow("segment_l");
+        destroyWindow("segment_r");
+        destroyWindow("weighted_l");
+        destroyWindow("weighted_r");
+        destroyWindow("segmented_Full");
+    }
 
-      cylinderIn.center +=cylinder_offset;
-      cylinderIn.theta += thetaOffset;
-      cylinderIn.phi += phiOffset;
+    Point3d normalOld(computeNormalFromSpherical(cylinderIn.theta, cylinderIn.phi));
 
-      return;
+    cylinderIn.center +=cylinder_offset;
+    cylinderIn.theta += thetaOffset;
+    cylinderIn.phi += phiOffset;
+
+    Point3d normalNew(computeNormalFromSpherical(cylinderIn.theta, cylinderIn.phi));
+    double oldPtDist0(norm(normalNew*(cylinderIn.height/2)-normalOld*(cylinderIn.height/2)+cylinder_offset));
+    double oldPtDist1(norm(normalNew*(-cylinderIn.height/2)+normalOld*(cylinderIn.height/2)+cylinder_offset));
+
+    return std::max(oldPtDist1, oldPtDist0);
     }
 
 cv::Point3d computeNormalFromSpherical(double theta, double phi, OutputArray jac)
@@ -831,6 +846,17 @@ cv::Point3d computeNormalFromSpherical(double theta, double phi, OutputArray jac
     }
     return output;
 
+}
+
+
+cv::Point2d computeSphericalFromNormal(cv::Point3d dir_vector)
+{ 
+    Point2d cylinder_orient;
+
+    cylinder_orient.x = (atan2(dir_vector.y, dir_vector.x)); //newTheta
+    cylinder_orient.y = (acos(dir_vector.z)); //newPhi
+
+    return cylinder_orient;
 }
 
 
