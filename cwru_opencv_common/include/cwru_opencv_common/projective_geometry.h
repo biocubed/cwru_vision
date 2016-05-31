@@ -84,6 +84,18 @@ cv_local::stereoCorrespondence reprojectPointTangent(const cv::Point3d &point,co
 
 
 /**
+ * @brief Projects a tangent into the camera image space from 3d space.
+ *
+ * @param const cv::Point3d & the point in 3d space.
+ * @param const cv::Point3d & the tangent in 3d space.
+ * @param const cv::Mat & The camera projection matrix.
+ *
+ * @return cv::Point2d the equivilent tangent vector in the image space.
+ */
+cv::Point2d reprojectPointTangent(const cv::Point3d &point, const cv::Point3d &pointDeriv, const cv::Mat & P);
+
+
+/**
  * @brief deprojects a point tangent from camera image space into stereo space.
  */
 cv::Point3d deprojectStereoTangent(const cv_local::stereoCorrespondence &imagePoint,const cv_local::stereoCorrespondence &imagePointTangent,const cv::Mat & , const cv::Mat & );

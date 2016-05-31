@@ -260,34 +260,59 @@ void reprojectPointsStereo(cv::InputArray points, std::vector < cv_local::stereo
 
 
 
-stereoCorrespondence reprojectPointTangent(const cv::Point3d &point,const cv::Point3d &pointDeriv,const Mat & P_l , const Mat & P_r )
+stereoCorrespondence reprojectPointTangent(const cv::Point3d &point, const cv::Point3d &pointDeriv,
+    const Mat & P_l, const Mat & P_r )
 {
-
     stereoCorrespondence tempDeriv;
     stereoCorrespondence tempOutput;
-    Mat ptDMat(4,2,CV_64FC1);
-    Mat dResults(3,2,CV_64FC1);
+    Mat ptDMat(4, 2, CV_64FC1);
+    Mat dResults(3, 2, CV_64FC1);
     Mat stP[2];
 
     stP[0]= P_l;
     stP[1]= P_r;
 
 
-    ptDMat.at<double>(0,0) = point.x;
-    ptDMat.at<double>(1,0) = point.y;
-    ptDMat.at<double>(2,0) = point.z;
-    ptDMat.at<double>(3,0) = 1.0;
-    ptDMat.at<double>(0,1) = pointDeriv.x;
-    ptDMat.at<double>(1,1) = pointDeriv.y;
-    ptDMat.at<double>(2,1) = pointDeriv.z;
-    ptDMat.at<double>(3,1) = 0.0; //This is a vector and not a point...
+    ptDMat.at<double>(0, 0) = point.x;
+    ptDMat.at<double>(1, 0) = point.y;
+    ptDMat.at<double>(2, 0) = point.z;
+    ptDMat.at<double>(3, 0) = 1.0;  // This is a point so it has a value of 1 at the 4th part. (projective geometry)
+    ptDMat.at<double>(0, 1) = pointDeriv.x;
+    ptDMat.at<double>(1, 1) = pointDeriv.y;
+    ptDMat.at<double>(2, 1) = pointDeriv.z;
+    ptDMat.at<double>(3, 1) = 0.0;  // This is a vector and not a point...
 
 
     for(int lr = 0; lr < 2; lr++){
         dResults = stP[lr]*ptDMat;
-        tempDeriv[lr].x = (dResults.at<double>(2,0)*dResults.at<double>(0,1)-dResults.at<double>(0,0)*dResults.at<double>(2,1))/(dResults.at<double>(2,0)*dResults.at<double>(2,0));
-        tempDeriv[lr].y = (dResults.at<double>(2,0)*dResults.at<double>(1,1)-dResults.at<double>(1,0)*dResults.at<double>(2,1))/(dResults.at<double>(2,0)*dResults.at<double>(2,0));
+        tempDeriv[lr].x = (dResults.at<double>(2, 0)*dResults.at<double>(0, 1)-dResults.at<double>(0, 0)*dResults.at<double>(2, 1))/(dResults.at<double>(2, 0)*dResults.at<double>(2, 0));
+        tempDeriv[lr].y = (dResults.at<double>(2, 0)*dResults.at<double>(1, 1)-dResults.at<double>(1, 0)*dResults.at<double>(2, 1))/(dResults.at<double>(2, 0)*dResults.at<double>(2, 0));
     }
+    return tempDeriv;
+}
+
+Point2d reprojectPointTangent(const cv::Point3d &point, const cv::Point3d &pointDeriv, const Mat & P)
+{
+    Point2d tempDeriv;
+    Mat ptDMat(4, 2, CV_64FC1);
+    Mat dResults(3, 2, CV_64FC1);
+
+    // populate the tangent matrix.
+    ptDMat.at<double>(0, 0) = point.x;
+    ptDMat.at<double>(1, 0) = point.y;
+    ptDMat.at<double>(2, 0) = point.z;
+    ptDMat.at<double>(3, 0) = 1.0;  // This is a point so it has a value of 1 at the 4th part. (projective geometry)
+    ptDMat.at<double>(0, 1) = pointDeriv.x;
+    ptDMat.at<double>(1, 1) = pointDeriv.y;
+    ptDMat.at<double>(2, 1) = pointDeriv.z;
+    ptDMat.at<double>(3, 1) = 0.0;  // This is a vector and not a point...
+
+    dResults = P*ptDMat;
+    tempDeriv.x = (dResults.at<double>(2, 0)*dResults.at<double>(0, 1)
+        -dResults.at<double>(0, 0)*dResults.at<double>(2, 1))/(dResults.at<double>(2, 0)*dResults.at<double>(2, 0));
+    tempDeriv.y = (dResults.at<double>(2,0)*dResults.at<double>(1, 1)
+    	-dResults.at<double>(1, 0)*dResults.at<double>(2, 1))/(dResults.at<double>(2, 0)*dResults.at<double>(2, 0));
+    
     return tempDeriv;
 }
 
