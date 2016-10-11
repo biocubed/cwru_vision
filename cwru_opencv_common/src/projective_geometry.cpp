@@ -175,8 +175,6 @@ void reprojectPoints(cv::InputArray _spacialPoints, cv::OutputArray _imagePoints
 
     Mat spacialPointsA(Mat(spacialPoints.t()).reshape(1).t());
 
-    
-
     // Resize the spatial point so that they are members of RP3
     Mat spacialPointsRP3(4, spacialPointsA.cols, CV_64FC1);
 
@@ -300,7 +298,7 @@ void reprojectPoints(InputArray pointsIn, OutputArray pointsOut,const cv::Mat &P
     if(rvec.total()==3 && tvec.total()==3)
     {
         // @todo Fix this
-        // prjPoints = transformPoints(pointsInMatH_,rvec,tvec); 
+        prjPoints = transformPoints(pointsInMatH_,rvec,tvec); 
     }
     else
     {
