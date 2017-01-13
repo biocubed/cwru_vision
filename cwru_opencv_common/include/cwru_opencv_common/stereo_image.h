@@ -44,3 +44,36 @@
   /*
    * @TODO: everything
    */
+
+/*
+ * \brief StereoImage class defines a container for a stereo image pair.
+ *
+ * The purpose of this container is to store an image as two parts, i.e. a left and right image half.
+ * This class also allows easy access to a merged image.
+ * The merged image can be used to make a video or something.
+ */
+class StereoImage
+{
+    cv::Mat view[2];
+
+    cv::Mat& left()
+    {
+        return view[0];
+    }
+    cv::Mat& right()
+    {
+        return view[1];
+    }
+
+    cv::Mat& operator[](int i)
+    {
+        assert(i == 0 || i == 1);
+        return view[i];
+    }
+
+    const cv::Mat& operator[](int i) const
+    {
+        assert(i == 0 || i == 1);
+        return view[i];
+    }
+};
