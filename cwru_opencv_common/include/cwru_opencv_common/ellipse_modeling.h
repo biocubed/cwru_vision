@@ -32,7 +32,6 @@
  *  LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  *  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
- *
  */
 
 /*
@@ -40,19 +39,17 @@
  * Examples including projecting a planar circle in 3d into an ellipse in the camera image space.
  */
 
-#ifndef ELLIPSEMODEL_H
-#define ELLIPSEMODEL_H
+#ifndef CWRU_OPENCV_COMMON_ELLIPSE_MODELING_H
+#define CWRU_OPENCV_COMMON_ELLIPSE_MODELING_H
 
 #include <iostream>
 #include <opencv2/opencv.hpp>
-
 #include "cwru_opencv_common/opencv_local.h"
 
 namespace cv_ellipse
 {
-
 /**
- *  @brief ellipse2Mat takes a RotatedRect (ellipse) and generates a 3x3 Conic Mat.
+ * @brief ellipse2Mat takes a RotatedRect (ellipse) and generates a 3x3 Conic Mat.
  *
  * The input is an opencv RotatedRect, the output is a 3x3 CV_64FC1 matrix.
  * The matrix is generated based on the conic matrix representation (v^T)A_qv = 0.
@@ -62,9 +59,9 @@ namespace cv_ellipse
  */
 cv::Mat ellipse2Mat(cv::RotatedRect, cv::OutputArray = cv::noArray());
 
-
-/** \brief findEllipseRotTransMat takes a detected ellipse from an image. 
- *  Then computes the 3x3 rotation translation [r1 r2 t]  matrix from it.
+/** 
+ * @brief findEllipseRotTransMat takes a detected ellipse from an image. 
+ * Then computes the 3x3 rotation translation [r1 r2 t]  matrix from it.
  *
  * The input is an opencv RotatedRect of the detected ellipse as well as the known radius of the original circle
  * The camera intrinsic matrix is the 3rd input.
@@ -72,10 +69,10 @@ cv::Mat ellipse2Mat(cv::RotatedRect, cv::OutputArray = cv::noArray());
  */
 cv::Mat findEllipseRotTransMat(cv::RotatedRect, double, cv::Mat);
 
+float getResultsDerivative(const cv::Mat& vect, const cv::Mat & ellipseMat, cv::OutputArray = cv::noArray());
 
-float getResultsDerivative(const cv::Mat& vect,const cv::Mat & ellipseMat, cv::OutputArray = cv::noArray());
-
-double computeEllipseEnergy(const cv::Rect &, const cv::RotatedRect&, const cv::Mat &,cv::OutputArray = cv::noArray());
+double computeEllipseEnergy(const cv::Rect &, const cv::RotatedRect&,
+  const cv::Mat &, cv::OutputArray = cv::noArray());
 
 cv::Point2d ellipsePoint(const cv::RotatedRect & input, double angle);
 
@@ -87,6 +84,4 @@ cv::Mat ellipsePointMatR(const cv::RotatedRect & input, double angle);
 
 };  // namespace cv_ellipse
 
-
-
-#endif
+#endif  // CWRU_OPENCV_COMMON_ELLIPSE_MODELING_H

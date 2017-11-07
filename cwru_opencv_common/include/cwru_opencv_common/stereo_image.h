@@ -35,12 +35,15 @@
  *
  */
 
-
-
  /*
   * This file is meant to handle an opencv stereo image class
   */
 
-  /*
-   * @TODO: everything
-   */
+#ifndef  CWRU_OPENCV_COMMON_STEREO_IMAGE_H
+#define  CWRU_OPENCV_COMMON_STEREO_IMAGE_H
+
+/*
+ * TODO(rcj): everything
+ */
+
+#endif  // CWRU_OPENCV_COMMON_STEREO_IMAGE_H

@@ -36,37 +36,31 @@
  */
 
 
-
-
 // This program tests the ellipse geometry (i.e. derivative etc)
 // nominally this program will use debugging code.
 
 #include <ros/ros.h>
 #include "cwru_opencv_common/ellipse_modeling.h"
 
-
 int main(int argc, char** argv)
 {
-  
-  cv::Size imageSize(100,100);
-  cv::Size ellipseSize(50,25);
+  cv::Size imageSize(100, 100);
+  cv::Size ellipseSize(50, 25);
   double ellipseAngle(0);
-  cv::Point2d ellipseCenter(50,50);
+  cv::Point2d ellipseCenter(50, 50);
   cv::RotatedRect testEllipse(ellipseCenter, ellipseSize, ellipseAngle);
 
-  cv::Size ellipseSize1(45,25);
+  cv::Size ellipseSize1(45, 25);
   cv::RotatedRect testEllipse1(ellipseCenter, ellipseSize1, ellipseAngle);
-  
 
-  cv::Mat image = cv::Mat::zeros(imageSize,CV_32FC1);
-  cv::Mat imageInv = cv::Mat::ones(imageSize,CV_8UC1)*255;
-  
-  cv::Mat image8U1 = cv::Mat::zeros(imageSize,CV_8UC1);
+  cv::Mat image = cv::Mat::zeros(imageSize, CV_32FC1);
+  cv::Mat imageInv = cv::Mat::ones(imageSize, CV_8UC1)*255;
+  cv::Mat image8U1 = cv::Mat::zeros(imageSize, CV_8UC1);
 
-  cv::Mat image8U3 = cv::Mat::zeros(imageSize,CV_8UC3);  
+  cv::Mat image8U3 = cv::Mat::zeros(imageSize, CV_8UC3);
 
   cv::Mat ellipseMatJac;
-  cv::Mat ellipseMat = cv_ellipse::ellipse2Mat(testEllipse,ellipseMatJac);
+  cv::Mat ellipseMat = cv_ellipse::ellipse2Mat(testEllipse, ellipseMatJac);
 
   cv::ellipse(image8U1, testEllipse, cv::Scalar(255), 1);
   cv::ellipse(imageInv, testEllipse, cv::Scalar(0), -1);
@@ -81,9 +75,9 @@ int main(int argc, char** argv)
   float maxVal(0);
   for (int i(0); i < imageSize.height; i++)
   {
-  	for (int j(0); j < imageSize.width; j++)
-  	{
-  		vect.at<float> (0) = static_cast<float> (j);
+    for (int j(0); j < imageSize.width; j++)
+    {
+      vect.at<float> (0) = static_cast<float> (j);
         vect.at<float> (1) = static_cast<float> (i);
         vect.at<float> (2) = static_cast<float> (1.0);
         float pixVal(cv_ellipse::getResultsDerivative(vect, ellipseMat));
@@ -92,74 +86,65 @@ int main(int argc, char** argv)
 
         if (pixVal < minVal) minVal = pixVal;
         if (pixVal > maxVal) maxVal = pixVal;
-  	}
+    }
   }
-  
+
   cv::Rect subRect(testEllipse.boundingRect());
-
   ROS_INFO("Computing ellipse energy");
-
-  cv::imshow("ellipse",imageInv);
-  
+  cv::imshow("ellipse", imageInv);
   cv::waitKey(0);
 
   subRect -= cv::Point(5, 5);
   subRect += cv::Size(10, 10);
   ROS_INFO_STREAM(subRect);
   cv::Mat deriv;
-  double energy(cv_ellipse::computeEllipseEnergy(subRect, testEllipse, imageInv,deriv));
-  double energy1(cv_ellipse::computeEllipseEnergy(subRect, testEllipse1, imageInv,deriv));
+  double energy(cv_ellipse::computeEllipseEnergy(subRect, testEllipse, imageInv, deriv));
+  double energy1(cv_ellipse::computeEllipseEnergy(subRect, testEllipse1, imageInv, deriv));
 
   std::cout << deriv << std::endl;
 
-
   image += minVal;
   image *= (1/(maxVal-minVal));
- 
 
   vect.at<float> (0) = static_cast<float> (50);
   vect.at<float> (1) = static_cast<float> (50);
   vect.at<float> (2) = static_cast<float> (1.0);
 
-  double centerE(cv_ellipse::getResultsDerivative(vect,ellipseMat));
-  ROS_INFO("center E: %f",centerE);
+  double centerE(cv_ellipse::getResultsDerivative(vect, ellipseMat));
+  ROS_INFO("center E: %f", centerE);
 
   ROS_INFO_STREAM(ellipseMat);
-  ROS_INFO("minVal: %f",minVal);
-  ROS_INFO("maxVal: %f",maxVal);
+  ROS_INFO("minVal: %f", minVal);
+  ROS_INFO("maxVal: %f", maxVal);
 
-  ROS_INFO("energy: %f",energy);
-  ROS_INFO("bad energy: %f",energy1);
+  ROS_INFO("energy: %f", energy);
+  ROS_INFO("bad energy: %f", energy1);
 
-  cv::imshow("ellipse",image8U1);
-  
+  cv::imshow("ellipse", image8U1);
   cv::waitKey(0);
-  
-  cv::imshow("ellipse",image);
-  
+  cv::imshow("ellipse", image);
   cv::waitKey(0);
 
   cv::ellipse(image, testEllipse, cv::Scalar(1.0), 1);
-  cv::imshow("ellipse",image);
-  
+  cv::imshow("ellipse", image);
+
   cv::waitKey(0);
-  
+
   double angle(0.0);
-  
-  cv::Mat newImage = cv::Mat::zeros(imageSize,CV_8UC1);
-  
-  while(angle < 6.29)
+  cv::Mat newImage = cv::Mat::zeros(imageSize, CV_8UC1);
+
+  while (angle < 6.29)
   {
-  	cv::Mat localMat1 = cv_ellipse::ellipsePointMat(testEllipse, angle);
+    cv::Mat localMat1 = cv_ellipse::ellipsePointMat(testEllipse, angle);
     cv::Mat localMat2 = cv_ellipse::ellipsePointMatR(testEllipse, angle);
     cv::Point localPt = cv_ellipse::ellipsePointR(testEllipse, angle);
-  	cv::Mat val1 = localMat1.t()*ellipseMat*localMat1;
-  	cv::Mat val2 = localMat2.t()*ellipseMat*localMat2;
-  	angle += 0.01;
-  	newImage.at< unsigned char >(localPt.y, localPt.x) = 255;
+    cv::Mat val1 = localMat1.t()*ellipseMat*localMat1;
+    cv::Mat val2 = localMat2.t()*ellipseMat*localMat2;
+    angle += 0.01;
+    newImage.at< unsigned char >(localPt.y, localPt.x) = 255;
   }
 
-  cv::imshow("ellipse",newImage);
+  cv::imshow("ellipse", newImage);
   cv::waitKey(0);
   ROS_INFO("Quiting the vesselness GPU node\n");
   return 0;

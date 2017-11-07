@@ -39,15 +39,13 @@
  * This header file provides some UI functions that may be commonly needed.
  */
 
-#ifndef CV_UI_H
-#define CV_UI_H
+#ifndef CWRU_OPENCV_COMMON_OPENCV_UI_H
+#define CWRU_OPENCV_COMMON_OPENCV_UI_H
 
 #include <opencv2/opencv.hpp>
 #include <cstdio>
 #include <vector>
 #include "cwru_opencv_common/opencv_local.h"
-
-
 
 namespace cv_ui
 {
@@ -59,19 +57,15 @@ namespace cv_ui
 */
 void getCoordinates(int event, int x, int y, int flags, void * param);
 
-
-
 /*
-    On left click:
-    Treat param as cv::Mat* and print its contents at clicked co-ordinates
+On left click:
+Treat param as cv::Mat* and print its contents at clicked co-ordinates
 */
-    void displayPixel(int event, int x, int y, int flags, void * param);
+void displayPixel(int event, int x, int y, int flags, void * param);
 
-    typedef std::vector< std::vector<cv::Point> > ContourList;
+typedef std::vector< std::vector<cv::Point> > ContourList;
 
-    void createContours(int event, int x, int y, int flags, void *param);
-}; //  namespace cv_ui
+void createContours(int event, int x, int y, int flags, void *param);
+};  // namespace cv_ui
 
-
-#endif
-
+#endif  // CWRU_OPENCV_COMMON_OPENCV_UI_H

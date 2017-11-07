@@ -1,6 +1,5 @@
 /* -*- mode: C++ -*- */
 /* $Id$ */
-
 /*********************************************************************
 * Software License Agreement (BSD License)
 *
@@ -35,42 +34,41 @@
 *  POSSIBILITY OF SUCH DAMAGE.
 *********************************************************************/
 
+#ifndef CWRU_OPENCV_COMMON_IMAGE_TOPIC_CALLBACKS_H
+#define CWRU_OPENCV_COMMON_IMAGE_TOPIC_CALLBACKS_H
 
-#ifndef IMAGE_CALLBACKS_H
-#define IMAGE_CALLBACKS_H
-
+#include <string>
 
 // This file defines a common image processing call back which can be used to subscribe to image topics.
 // The purpose is to make the main files leaner by not needed a full topic call back definition/ declaration.
-
 
 /*
  * @brief The function will load and attempt to transcribe the image type:
  */
 image_transport::Subscriber imageTopicSubscription(image_transport::ImageTransport &,
-    const std::string &imageTopic,const std::string & encoding, cv::Mat * imagePtr, bool * updateBool, int = 1);
+    const std::string &imageTopic, const std::string & encoding, cv::Mat * imagePtr, bool * updateBool, int = 1);
 
 
 it.subscribe("/catadioptric_play/segmented_catheter", 1,
       boost::function< void(const sensor_msgs::ImageConstPtr &)>
       (boost::bind(newImageCallback, _1, std::string("mono8"), &localImageSeg, &freshBw)));
 
-
 /*
- * @todo: move the function below to a *.cpp file
+ * Todo (rcj): move the function below to a *.cpp file
  */
-void imageTopicCallback(const sensor_msgs::ImageConstPtr& msg,const std::string &imageType,cv::Mat* outputImage, bool *newImage)
+void imageTopicCallback(const sensor_msgs::ImageConstPtr& msg, const std::string &imageType,
+  cv::Mat* outputImage, bool *newImage)
 {
-    try
-    {
-       outputImage[0] =  cv_bridge::toCvShare(msg, imageType.c_str())->image.clone();
-       newImage[0] = true;
-    }
-    catch(cv_bridge::Exception& e)
-    {
-        ROS_ERROR("Could not convert from '%s' to %s.",imageType.c_str(),msg ->encoding.c_str());
-        newImage[0] = false;
-    }
+  try
+  {
+    outputImage[0] =  cv_bridge::toCvShare(msg, imageType.c_str())->image.clone();
+    newImage[0] = true;
+  }
+  catch(cv_bridge::Exception& e)
+  {
+    ROS_ERROR("Could not convert from '%s' to %s.", imageType.c_str(), msg->encoding.c_str());
+    newImage[0] = false;
+  }
 }
 
-#endif
+#endif  // CWRU_OPENCV_COMMON_IMAGE_TOPIC_CALLBACKS_H

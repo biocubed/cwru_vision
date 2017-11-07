@@ -40,23 +40,21 @@
 */
 
 
-#ifndef PROJECTIVE_GEOMETRY_H
-#define PROJECTIVE_GEOMETRY_H
+#ifndef CWRU_OPENCV_COMMON_PROJECTIVE_GEOMETRY_H
+#define CWRU_OPENCV_COMMON_PROJECTIVE_GEOMETRY_H
 
-
-#include <ros/ros.h>
-
+#include <string>
+#include <vector>
 #include <iostream>
+
 #include <opencv2/opencv.hpp>
+#include <ros/ros.h>
+#include <sensor_msgs/CameraInfo.h>
 
 #include "cwru_opencv_common/opencv_local.h"
-#include <sensor_msgs/CameraInfo.h>
-#include <string>
-
 
 namespace cv_projective
 {
-
 
 class cameraProjectionMatrices
 {
@@ -89,7 +87,8 @@ private:
  *
  * @return cv::Point2d the point in the image space.
  *
- * The reprojected point is assumed to be in some object frame o, which is converted to the camera frame through rvec and tvec. 
+ * The reprojected point is assumed to be in some object frame o, which is converted
+ *   to the camera frame through rvec and tvec.
  */
 cv::Point2d reprojectPoint(const cv::Point3d &point, const cv::Mat &P,
     const cv::Mat& rvec = cv::Mat(), const cv::Mat & = cv::Mat(), cv::OutputArray = cv::noArray());
@@ -104,10 +103,10 @@ cv::Point2d reprojectPoint(const cv::Point3d &point, const cv::Mat &P,
  * @param const cv::Mat &tvec=cv::Mat() the translation vector (3x1). 
  * @param const cv::OutputArray &jac=cv::Mat() the jacobian matrix w.r.t the point, rvec, and tvec. (2*n x 9).
  *
- * 
- * 
- * The reprojected points are assumed to be in some object frame o, which are converted to the camera frame through rvec and tvec. 
  * There is no return type.
+ * 
+ * The reprojected points are assumed to be in some object frame o, which are converted
+ *   to the camera frame through rvec and tvec.
  */
 void reprojectPoints(cv::InputArray spacialPoints, cv::OutputArray imagePoints,
     const cv::Mat &P, const cv::Mat &, const cv::Mat &);
@@ -124,7 +123,8 @@ void reprojectPoints(cv::InputArray spacialPoints, cv::OutputArray imagePoints,
  * The reprojected points are assumed to be in some object frame o, which are converted to the camera frame through G. 
  * There is no return type.
  */ 
-void reprojectPointsSE3(cv::InputArray spacialPoints, cv::OutputArray imagePoints, const cv::Mat &P, const cv::Mat &G, cv::OutputArray = cv::noArray());
+void reprojectPointsSE3(cv::InputArray spacialPoints, cv::OutputArray imagePoints, const cv::Mat &P,
+  const cv::Mat &G, cv::OutputArray = cv::noArray());
 
 /** 
  * @brief reprojectPointStereo Projects a point in 3d coords to a stereo pair of point in a camera image.
@@ -138,7 +138,8 @@ void reprojectPointsSE3(cv::InputArray spacialPoints, cv::OutputArray imagePoint
  *
  * @return cv_local::stereoCorrespondence the point pair in the images.
  *
- * The reprojected point is assumed to be in some object frame o, which is converted to the camera frame through rvec and tvec. 
+ * The reprojected point is assumed to be in some object frame o, which is converted
+ *   to the camera frame through rvec and tvec.
  */
 cv_local::stereoCorrespondence reprojectPointStereo(const cv::Point3d &point,
     const cv::Mat &P_l, const cv::Mat &P_r, const cv::Mat & = cv::Mat(), const cv::Mat & = cv::Mat());
@@ -156,9 +157,10 @@ cv_local::stereoCorrespondence reprojectPointStereo(const cv::Point3d &point,
  *
  * @return cv_local::stereoCorrespondence the tangent pair in the images.
  *
- * The reprojected point and derivative is assumed to be in some object frame o, which is converted to the camera frame through rvec and tvec. 
+ * The reprojected point and derivative is assumed to be in some object frame o, which is converted
+ *   to the camera frame through rvec and tvec.
  */
-cv_local::stereoCorrespondence reprojectPointDerivativeStereo(const cv::Point3d &point, const cv::Point3d &pointDeriv, 
+cv_local::stereoCorrespondence reprojectPointDerivativeStereo(const cv::Point3d &point, const cv::Point3d &pointDeriv,
     const cv::Mat &P_l, const cv::Mat &P_r, const cv::Mat & = cv::Mat(), const cv::Mat & = cv::Mat());
 
 /** 
@@ -172,12 +174,15 @@ cv_local::stereoCorrespondence reprojectPointDerivativeStereo(const cv::Point3d 
  * @param const cv::Mat &tvec=cv::Mat() the translation vector (3x1). 
  * @param const cv::OutputArray &jac=cv::Mat() the jacobian matrix w.r.t the point, rvec, and tvec. (4 x 9).
  *
- * The reprojected points are assumed to be in some object frame o, which is converted to the camera frame through rvec and tvec. 
+ * The reprojected points are assumed to be in some object frame o, which is converted
+ *   to the camera frame through rvec and tvec.
  */
-void reprojectPointsStereo(cv::InputArray points, std::vector < cv_local::stereoCorrespondence > & ,const cv::Mat &P_l, const cv::Mat &P_r,const cv::Mat & = cv::Mat(), const cv::Mat & = cv::Mat() );
+void reprojectPointsStereo(cv::InputArray points, std::vector < cv_local::stereoCorrespondence > &,
+  const cv::Mat &P_l, const cv::Mat &P_r, const cv::Mat & = cv::Mat(), const cv::Mat & = cv::Mat() );
 
 /** 
- * @brief reprojectPointsStereo Projects an array of points in 3d coords to a vector of stereo pairs of points in a camera image.
+ * @brief reprojectPointsStereo Projects an array of points in 3d coords
+ *   to a vector of stereo pairs of points in a camera image.
  *
  * @param const cv::InputArray &points the point in 3d space.
  * @param const cv::OutputArray & points_left the point list in the left image space.
@@ -188,9 +193,11 @@ void reprojectPointsStereo(cv::InputArray points, std::vector < cv_local::stereo
  * @param const cv::Mat &tvec=cv::Mat() the translation vector (3x1). 
  * @param const cv::OutputArray &jac=cv::Mat() the jacobian matrix w.r.t the point, rvec, and tvec. (4 x 9).
  *
- * The reprojected points are assumed to be in some object frame o, which is converted to the camera frame through rvec and tvec. 
+ * The reprojected points are assumed to be in some object frame o, which is converted to the
+ * camera frame through rvec and tvec.
  */
-void reprojectPointsStereo(cv::InputArray points, cv::OutputArray points_left, cv::OutputArray points_right  ,const cv::Mat &P_l, const cv::Mat &P_r, const cv::Mat & = cv::Mat(),  const cv::Mat & = cv::Mat() );
+void reprojectPointsStereo(cv::InputArray points, cv::OutputArray points_left, cv::OutputArray points_right,
+  const cv::Mat &P_l, const cv::Mat &P_r, const cv::Mat & = cv::Mat(),  const cv::Mat & = cv::Mat() );
 
 
 /** 
@@ -210,7 +217,8 @@ void reprojectPointsStereo(cv::InputArray points, cv::OutputArray points_left, c
 cv::Point2d reprojectPointTangent(const cv::Point3d &point, const cv::Point3d &pointDeriv, const cv::Mat & P);
 
 /** 
- * @brief deprojectStereoTangent:  Deprojects a camera tangent pair in a stereo image to a 3d vector in the camera 3d frame.
+ * @brief deprojectStereoTangent:  Deprojects a camera tangent pair in a stereo image
+ *   to a 3d vector in the camera 3d frame.
  *
  * @param const cv_local::stereoCorrespondence& imagePoints the point pair in the images.
  * @param const cv_local::stereoCorrespondence& imagePointsTangent the tangent pair in the images.
@@ -238,7 +246,8 @@ cv::Point3d deprojectStereoPoint(const cv_local::stereoCorrespondence&, const cv
 
 
 /** 
- * @brief deprojectStereoPoints:  Deprojects an array of camera point pairs in a stereo image to a 3d vector in the camera 3d frame.
+ * @brief deprojectStereoPoints:  Deprojects an array of camera point pairs in a stereo image
+ *   to a 3d vector in the camera 3d frame.
  *
  * @param const std::vector< cv_local::stereoCorrespondence > & imagePoints the point pair in the images.
  * @param const cv::OutputArray & spacialPoints The 3d points in the camera frame.
@@ -261,7 +270,8 @@ void deprojectStereoPoints(const std::vector < cv_local::stereoCorrespondence > 
  * @param cv::OutputArray &jac=cv::noArray() the jacobian matrix of the gMat w.r.t rvect and tvect (6 x 6).
  * 
  */
-void transformJacobian(const cv::Mat &rvect ,const cv::Mat & tvect, cv::Mat & trans , cv::OutputArray trans_jac = cv::noArray());
+void transformJacobian(const cv::Mat &rvect, const cv::Mat & tvect, cv::Mat & trans,
+  cv::OutputArray trans_jac = cv::noArray());
 
 /**
  * @brief computeRvecTvec computes the rvec and the tvec, given the transform matrix G.
@@ -289,7 +299,6 @@ void computeRvecTvec(const cv::Mat & gMat, cv::Mat & rvect, cv::Mat & tvect, cv:
 cv::Mat transformPoints(const cv::Mat &points, const cv::Mat& rvec,
     const cv::Mat &tvec, cv::OutputArray jac = cv::noArray());
 
-
 /**
  * @brief transformPointsSE3: transform a 4xn matrix of RP3 points using a 4x4 mat G (option jacobian output)
  *  
@@ -300,12 +309,10 @@ cv::Mat transformPoints(const cv::Mat &points, const cv::Mat& rvec,
  * @return cv::Mat the transformed points
  *
  */
-cv::Mat transformPointsSE3(const cv::Mat &,const cv::Mat &, cv::OutputArray = cv::noArray());
+cv::Mat transformPointsSE3(const cv::Mat &, const cv::Mat &, cv::OutputArray = cv::noArray());
+
+};  // namespace cv_projective
 
 
-
-};
-
-
-#endif
+#endif  // CWRU_OPENCV_COMMON_PROJECTIVE_GEOMETRY_H
 

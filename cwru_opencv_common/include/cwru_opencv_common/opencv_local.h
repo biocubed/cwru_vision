@@ -59,7 +59,7 @@ namespace cv_local
  */
 struct stereoCorrespondence
 {
-  //  fundamentally this struct stores 2 floating point opencv points.
+  // fundamentally this struct stores 2 floating point opencv points.
   cv::Point2f left_;
   cv::Point2f right_;
 
@@ -127,10 +127,10 @@ struct rotatedRectStereoCorr
   }
 
   /*
- * @brief operator[]: returns a const reference to the left and right rotated rect. 
- * 
- * @param int i: selectes either the left (0) or right (1) RotatedRect.
- */
+   * @brief operator[]: returns a const reference to the left and right rotated rect. 
+   * 
+   * @param int i: selectes either the left (0) or right (1) RotatedRect.
+   */
   const cv::RotatedRect& operator[](int i) const
   {
     assert(i == 0 || i == 1);
@@ -178,7 +178,6 @@ struct rectStereoCorr
  */
 struct stereoImage
 {
-  
   // The pair of images.
   cv::Mat view[2];
 
@@ -201,10 +200,10 @@ struct stereoImage
   }
 
   /*
- * @brief operator[]: returns a reference to the left or right image. 
- * 
- * @param int i: selectes either the left (0) or right (1) image.
- */
+   * @brief operator[]: returns a reference to the left or right image. 
+   * 
+   * @param int i: selectes either the left (0) or right (1) image.
+   */
   cv::Mat& operator[](int i)
   {
     assert(i == 0 || i == 1);
@@ -212,10 +211,10 @@ struct stereoImage
   }
 
   /*
- * @brief operator[]: returns a const reference to the left or right image. 
- * 
- * @param int i: selectes either the left (0) or right (1) image.
- */
+   * @brief operator[]: returns a const reference to the left or right image. 
+   * 
+   * @param int i: selectes either the left (0) or right (1) image.
+   */
   const cv::Mat& operator[](int i) const
   {
     assert(i == 0 || i == 1);
@@ -235,11 +234,11 @@ struct stereoImage
  */
 struct circleTracker3d
 {
-    cv::Point3d center;
-    cv::Point3d zN;
-    cv::Point3d zN_Alt;
-    double rad;
-    double errorXY;
+  cv::Point3d center;
+  cv::Point3d zN;
+  cv::Point3d zN_Alt;
+  double rad;
+  double errorXY;
 };
 
 /*
@@ -289,7 +288,8 @@ template<typename _Tp> bool pointXSortingLH(const cv::Point_<_Tp> &A, const cv::
  * In the first iteration, the expectation is that the grid is largely aligned to the camera where width is mostly in the x dir. and height is mostly in the y dir.
  * This will make incomplete data processing easier.
  */
-template<typename _Tp> int sortPoints2d(std::vector< cv::Point_<_Tp> > &pointArray, const cv::Size &gridSize, listOrigin LO = UpperLeft , XY dir = X,  bool filledIn = true)
+template<typename _Tp> int sortPoints2d(std::vector< cv::Point_<_Tp> > &pointArray,
+  const cv::Size &gridSize, listOrigin LO = UpperLeft, XY dir = X,  bool filledIn = true)
 {
   /* The purpose of this function is to take a list of a points and sort them according to a grid. (This starts from the origin and is iterated based on the input parameters)
    * In the first iteration, the expectation is that the grid is largely aligned to the camera where width is mostly in the x dir. and height is mostly in the y dir.
@@ -302,11 +302,11 @@ template<typename _Tp> int sortPoints2d(std::vector< cv::Point_<_Tp> > &pointArr
 
   int outputResult(3);
 
-  if( expSize > pointArray.size())
+  if (expSize > pointArray.size())
   {
     return 1;
   }
-  if( expSize < pointArray.size())
+  if (expSize < pointArray.size())
   {
     outputResult = 2;
   }
@@ -324,11 +324,11 @@ template<typename _Tp> int sortPoints2d(std::vector< cv::Point_<_Tp> > &pointArr
 
   if ((LO >> 1) == 1)
   {
-      xSort = &pointXSortingLH;
+    xSort = &pointXSortingLH;
   }
   else
   {
-      xSort = &pointXSortingHL;
+    xSort = &pointXSortingHL;
   }
 
   bool (*sort1)(const cv::Point_<_Tp> &, const cv::Point_<_Tp> & );
@@ -351,26 +351,23 @@ template<typename _Tp> int sortPoints2d(std::vector< cv::Point_<_Tp> > &pointArr
   {
     if (i*gridSize.width > pointArray.size())
     {
-      break; //escape the loop
+      break;  // escape the loop
     }
-    
     if ((i+1)*gridSize.width >= pointArray.size())
     {
-      sort(pointArray.begin()+i*gridSize.width,pointArray.end(),sort2);    
+      sort(pointArray.begin() + i*gridSize.width, pointArray.end(), sort2);
     }
     else
     {
-      sort(pointArray.begin()+i*gridSize.width, pointArray.begin()+(i+1)*gridSize.width, sort2);
+      sort(pointArray.begin() + i*gridSize.width, pointArray.begin() + (i+1)*gridSize.width, sort2);
     }
   }
   return outputResult;
 }
 
-//  This function compute the error in hue
 int byteError(int, int);
 
 void defaultWindowLocation(int &lx, int &ly, int &rx, int &ry);
-
 
 template<typename _Tp, typename _Tp2> inline cv::Point3_<_Tp2> normalizePt3(const cv::Point3_<_Tp>& inputPt)
 {
@@ -381,11 +378,7 @@ template<typename _Tp, typename _Tp2> inline cv::Point3_<_Tp2> normalizePt3(cons
 
 bool contourCompare(std::vector< cv::Point> contour1, std::vector<cv::Point> contour2);
 
-
 int countOutputChannels(int channelCount);
-
-
-
 
 };  // namespace cv_local
 

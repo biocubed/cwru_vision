@@ -35,9 +35,11 @@
  *
  */
 
+//  This file contains functions which are  meant to handle numerical ellipse optimization.
+#ifndef CWRU_OPENCV_COMMON_ELLIPSE_MODELING_NUMERICAL_H
+#define CWRU_OPENCV_COMMON_ELLIPSE_MODELING_NUMERICAL_H
 
- //  This file contains functions which are  meant to handle numerical ellipse optimization.
-
+#include <vector>
 
 namespace cv_ellipse_num
 {
@@ -52,8 +54,8 @@ namespace cv_ellipse_num
  * @param double:   The circle radius.
  * @param int   : the number of circle segments.
  */
-double circleEnergy(const cv::Mat &, const cv::Mat &, const cv::Mat &, const cv::Point3d &, double, int = 10, cv::OutputArray = cv::noArray());
-
+double circleEnergy(const cv::Mat &, const cv::Mat &, const cv::Mat &, const cv::Point3d &,
+  double, int = 10, cv::OutputArray = cv::noArray());
 
 /*
  * @brief projectCirclePoints 
@@ -66,8 +68,8 @@ double circleEnergy(const cv::Mat &, const cv::Mat &, const cv::Mat &, const cv:
  * 
  * @return the ROI which encompasses the list of points.
  */
-cv::Rect projectCirclePoints(std::vector<cv::Point> &, const cv::Mat &, const cv::Mat &, const cv::Point3d &, double rad, int = 10);
-
+cv::Rect projectCirclePoints(std::vector<cv::Point> &, const cv::Mat &, const cv::Mat &,
+  const cv::Point3d &, double rad, int = 10);
 
 /**
  * @brief deprojectEllipseEnds deproject the endpoints of the ellipse
@@ -80,6 +82,9 @@ cv::Rect projectCirclePoints(std::vector<cv::Point> &, const cv::Mat &, const cv
  * 
  * @return the ROI which encompasses the list of points.
  */
-void deprojectEllipseEnds(const cv_local::rotatedRectStereoCorr &, cv::Point3d & , cv::Point3d & , const cv::Mat & , const cv::Mat &);
+void deprojectEllipseEnds(const cv_local::rotatedRectStereoCorr &, cv::Point3d &, cv::Point3d &,
+  const cv::Mat &, const cv::Mat &);
 
 };  // namespace cv_ellipse_num
+
+#endif  // CWRU_OPENCV_COMMON_ELLIPSE_MODELING_NUMERICAL_H

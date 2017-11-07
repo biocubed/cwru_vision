@@ -46,330 +46,67 @@
 #include <random>
 
 
-using namespace cv;
 
 
 struct ellipseMatchingTest : testing::Test
 {
-    // member information:
-    Mat P;
-    Mat G;
+  // member information:
+  cv::Mat P;
+  cv::Mat G;
 
-    // tracked circle:
-    Point3d circleCenter;
-    double rad;
+  // tracked circle:
+  cv::Point3d circleCenter;
+  double rad;
 
-
-    //
-
-    ellipseMatchingTest():
+  ellipseMatchingTest():
     P(3, 4, CV_64FC1),
     circleCenter(0.0, 0.0, 10.0),
     rad(0.2)
-    {
-    	// populate the projection Matrix:
-    	P.setTo(0.0);
-    	P.at<double>(0, 0) = 1000.0;
-    	P.at<double>(1, 1) = 1000.0;
-    	P.at<double>(0, 2) = 100.0;
-    	P.at<double>(1, 2) = 100.0;
-    	P.at<double>(2, 2) = 1.0;
+  {
+    // populate the projection Matrix:
+    P.setTo(0.0);
+    P.at<double>(0, 0) = 1000.0;
+    P.at<double>(1, 1) = 1000.0;
+    P.at<double>(0, 2) = 100.0;
+    P.at<double>(1, 2) = 100.0;
+    P.at<double>(2, 2) = 1.0;
 
-        G = Mat::eye(4, 4, CV_64FC1);
-    }
+    G = cv::Mat::eye(4, 4, CV_64FC1);
+  }
 
-    ~ellipseMatchingTest() {
-    }
+  ~ellipseMatchingTest()
+  {
+  }
 };
 
 
 TEST_F(ellipseMatchingTest, testEllipseMatchingResults)
 {
-    // Import image
-
-    // 1. create an ellipse image:
-    // create the image:
-    Mat test_image(200, 200, CV_8UC1);
-	test_image.setTo(0);
-
-    // project the base circle:
-    std::vector< std::vector<Point> > ptList;
-    ptList.resize(1);
-    ptList[0].clear();
-    cv::Rect circleRect(cv_ellipse_num::projectCirclePoints(ptList[0], this->P, this->G, this->circleCenter, this->rad, 20));
-	drawContours(test_image, ptList, 0, Scalar(255, 255, 255), -1, 8, noArray(), INT_MAX);
-
-    double idealMatch(cv_ellipse_num::circleEnergy(test_image, this->P, this->G, this->circleCenter, this->rad, 20));
-
-	std::default_random_engine generator;
-    std::normal_distribution<double> distributionLin(0.0,1.0);
-    std::normal_distribution<double> distributionRot(0.0,3.0);
-
-    // make a for loop to test random perturbations.
-    for (int ind(0); ind < 1000; ind++)
-    {
-        Mat G_bad = this->G.clone();
-    	// create the perturbations:
-        // Rotation perturbation:
-		double xOff(distributionLin(generator));
-		double yOff(distributionLin(generator));
-		double zOff(distributionLin(generator));
-
-		double qX(distributionLin(generator));
-		double qY(distributionLin(generator));
-		double qZ(distributionLin(generator));
-		double ang(distributionRot(generator));
-
-    	G_bad.at<double> (0, 3) = xOff;
-    	G_bad.at<double> (1, 3) = yOff;
-    	G_bad.at<double> (2, 3) = zOff;
-
-    	cv_rot::Quaternion qua_rotation;
-		qua_rotation.data[0] = cos(ang/2);
-		qua_rotation.data[1] = sin(ang/2)*qX;
-		qua_rotation.data[2] = sin(ang/2)*qY;
-		qua_rotation.data[3] = sin(ang/2)*qZ;
-
-
-		cv_rot::Quaternion normedQ(QuatNormalize(qua_rotation));
-
-		Mat rot = cv_rot::QuatToMatrix(normedQ);
-
-		rot.copyTo(G_bad.rowRange(0, 3).colRange(0, 3));
-
-    	double perturbMatch(cv_ellipse_num::circleEnergy(test_image, this->P, G_bad, this->circleCenter, this->rad, 20));
-    	ASSERT_TRUE(perturbMatch < idealMatch);
-	}
-}
-
-TEST_F(ellipseMatchingTest, testEllipseMatchingSmallResults)
-{
-    // Import image
-
-    // 1. create an ellipse image:
-    // create the image:
-    Mat test_image(200, 200, CV_8UC1);
-	test_image.setTo(0);
-
-    // project the base circle:
-    std::vector< std::vector<Point> > ptList;
-    ptList.resize(1);
-    ptList[0].clear();
-    cv::Rect circleRect(cv_ellipse_num::projectCirclePoints(ptList[0], this->P, this->G, this->circleCenter, this->rad, 20));
-	drawContours(test_image, ptList, 0, Scalar(255, 255, 255), -1, 8, noArray(), INT_MAX);
-
-    double idealMatch(cv_ellipse_num::circleEnergy(test_image, this->P, this->G, this->circleCenter, this->rad, 20));
-
-	std::default_random_engine generator;
-    std::normal_distribution<double> distributionLin(0.0, 0.025);
-    std::normal_distribution<double> distributionRot(0.0, 0.3);
-
-    // make a for loop to test random perturbations.
-    for (int ind(0); ind < 100000; ind++)
-    {
-        Mat G_bad = this->G.clone();
-    	// create the perturbations:
-        // Rotation perturbation:
-		double xOff(distributionLin(generator));
-		double yOff(distributionLin(generator));
-		double zOff(distributionLin(generator));
-
-		double qX(distributionLin(generator));
-		double qY(distributionLin(generator));
-		double qZ(distributionLin(generator));
-		double ang(distributionRot(generator));
-
-    	G_bad.at<double> (0, 3) = xOff;
-    	G_bad.at<double> (1, 3) = yOff;
-    	G_bad.at<double> (2, 3) = zOff;
-
-    	cv_rot::Quaternion qua_rotation;
-		qua_rotation.data[0] = cos(ang/2);
-		qua_rotation.data[1] = sin(ang/2)*qX;
-		qua_rotation.data[2] = sin(ang/2)*qY;
-		qua_rotation.data[3] = sin(ang/2)*qZ;
-
-
-		cv_rot::Quaternion normedQ(QuatNormalize(qua_rotation));
-
-		Mat rot = cv_rot::QuatToMatrix(normedQ);
-
-		rot.copyTo(G_bad.rowRange(0, 3).colRange(0, 3));
-
-    	double perturbMatch(cv_ellipse_num::circleEnergy(test_image, this->P, G_bad, this->circleCenter, this->rad, 20));
-    	ASSERT_TRUE(perturbMatch <= idealMatch);
-	}
-}
-
-// @TODO Make a unit test for identifying the optimal location of a circle.
-// include a numerical based derivative estimation.
-
-
-TEST_F(ellipseMatchingTest, testMultipleEllipseMatchingResults)
-{
-    // Import image
-    // @TODO: finish this for a vector of ellipses
-    // 1. create an ellipse image:
-    // create the image:
-    Mat test_image(200, 200, CV_8UC1);
-	test_image.setTo(0);
-
-    // project the base circle:
-    std::vector< std::vector<Point> > ptList;
-    ptList.resize(1);
-    ptList[0].clear();
-    cv::Rect circleRect(cv_ellipse_num::projectCirclePoints(ptList[0], this->P, this->G, this->circleCenter, this->rad, 20));
-	drawContours(test_image, ptList, 0, Scalar(255, 255, 255), -1, 8, noArray(), INT_MAX);
-
-    double idealMatch(cv_ellipse_num::circleEnergy(test_image, this->P, this->G, this->circleCenter, this->rad, 20));
-
-	std::default_random_engine generator;
-    std::normal_distribution<double> distributionLin(0.0, 0.025);
-    std::normal_distribution<double> distributionRot(0.0, 0.3);
-
-    // make a for loop to test random perturbations.
-    for (int ind(0); ind < 1000; ind++)
-    {
-        Mat G_bad = this->G.clone();
-    	// create the perturbations:
-        // Rotation perturbation:
-		double xOff(distributionLin(generator));
-		double yOff(distributionLin(generator));
-		double zOff(distributionLin(generator));
-
-		double qX(distributionLin(generator));
-		double qY(distributionLin(generator));
-		double qZ(distributionLin(generator));
-		double ang(distributionRot(generator));
-
-    	G_bad.at<double> (0, 3) = xOff;
-    	G_bad.at<double> (1, 3) = yOff;
-    	G_bad.at<double> (2, 3) = zOff;
-
-    	cv_rot::Quaternion qua_rotation;
-		qua_rotation.data[0] = cos(ang/2);
-		qua_rotation.data[1] = sin(ang/2)*qX;
-		qua_rotation.data[2] = sin(ang/2)*qY;
-		qua_rotation.data[3] = sin(ang/2)*qZ;
-
-
-		cv_rot::Quaternion normedQ(QuatNormalize(qua_rotation));
-
-		Mat rot = cv_rot::QuatToMatrix(normedQ);
-
-		rot.copyTo(G_bad.rowRange(0, 3).colRange(0, 3));
-
-    	double perturbMatch(cv_ellipse_num::circleEnergy(test_image, this->P, G_bad, this->circleCenter, this->rad, 20));
-    	ASSERT_TRUE(perturbMatch <= idealMatch);
-	}
-}
-
-
-TEST_F(ellipseMatchingTest, testEllipseMatchingDerivative)
-{
-    // Import image
-
-    // 1. create an ellipse image:
-    // create the image:
-    Mat test_image(200, 200, CV_8UC1);
-    test_image.setTo(0);
-
-    // project the base circle:
-    std::vector< std::vector<Point> > ptList;
-    ptList.resize(1);
-    ptList[0].clear();
-    cv::Rect circleRect(
-        cv_ellipse_num::projectCirclePoints(ptList[0], this->P, this->G, this->circleCenter, this->rad, 20));
-    drawContours(test_image, ptList, 0, Scalar(255, 255, 255), -1, 8, noArray(), INT_MAX);
-
-    // test the derivative
-    Mat jac;
-    double idealMatch(cv_ellipse_num::circleEnergy(
-        test_image, this->P, this->G, this->circleCenter, this->rad, 20, jac));
-
-    std::cout << jac << std::endl;
-
-    std::default_random_engine generator;
-    std::normal_distribution<double> distributionLin(0.0, 0.015);
-    std::normal_distribution<double> distributionRot(0.0, 0.075);
-
-
-    // make a for loop to test random perturbations.
-    for (int ind(0); ind < 1000; ind++)
-    {
-        Mat G_bad = this->G.clone();
-        // create the perturbations:
-        // Rotation perturbation:
-        double xOff(distributionLin(generator));
-        double yOff(distributionLin(generator));
-        double zOff(distributionLin(generator));
-
-        double qX(distributionLin(generator));
-        double qY(distributionLin(generator));
-        double qZ(distributionLin(generator));
-        double ang(distributionRot(generator));
-
-        G_bad.at<double> (0, 3) = xOff;
-        G_bad.at<double> (1, 3) = yOff;
-        G_bad.at<double> (2, 3) = zOff;
-
-        cv_rot::Quaternion qua_rotation;
-        qua_rotation.data[0] = cos(ang/2);
-        qua_rotation.data[1] = sin(ang/2)*qX;
-        qua_rotation.data[2] = sin(ang/2)*qY;
-        qua_rotation.data[3] = sin(ang/2)*qZ;
-
-
-        cv_rot::Quaternion normedQ(QuatNormalize(qua_rotation));
-
-        Mat rot = cv_rot::QuatToMatrix(normedQ);
-
-        rot.copyTo(G_bad.rowRange(0, 3).colRange(0, 3));
-
-        Mat jacTemp;
-        double perturbMatch(
-            cv_ellipse_num::circleEnergy(test_image, this->P, G_bad, this->circleCenter, this->rad, 20, jacTemp));
-        if ((ind % 50 ) == 0)
-        {
-            std::cout << jacTemp << std::endl;
-            std::cout << perturbMatch << "\n";
-        }
-        ASSERT_TRUE(perturbMatch < idealMatch);
-    }
-}
-
-TEST_F(ellipseMatchingTest, testEllipseMatchingDerivativeConverge)
-{
-    // Import image
-
-    // 1. create an ellipse image:
-    // create the image:
-    Mat test_image(200, 200, CV_8UC1);
-    test_image.setTo(0);
-
-    // project the base circle:
-    std::vector< std::vector<Point> > ptList;
-    ptList.resize(1);
-    ptList[0].clear();
-    cv::Rect circleRect(
-        cv_ellipse_num::projectCirclePoints(ptList[0], this->P, this->G, this->circleCenter, this->rad, 20));
-    drawContours(test_image, ptList, 0, Scalar(255, 255, 255), -1, 8, noArray(), INT_MAX);
-
-    // test the derivative
-    Mat jac;
-    double idealMatch(cv_ellipse_num::circleEnergy(
-        test_image, this->P, this->G, this->circleCenter, this->rad, 20, jac));
-
-    std::cout << jac << std::endl;
-
-    std::default_random_engine generator;
-    std::normal_distribution<double> distributionLin(0.0, 0.015);
-    std::normal_distribution<double> distributionRot(0.0, 0.075);
-
-
-    // make a for loop to test random perturbations.
-  
-    Mat G_bad = this->G.clone();
+  // Import image
+
+  // 1. create an ellipse image:
+  // create the image:
+  cv::Mat test_image(200, 200, CV_8UC1);
+  test_image.setTo(0);
+
+  // project the base circle:
+  std::vector< std::vector<cv::Point> > ptList;
+  ptList.resize(1);
+  ptList[0].clear();
+  cv::Rect circleRect(cv_ellipse_num::projectCirclePoints(ptList[0], this->P, this->G,
+    this->circleCenter, this->rad, 20));
+  drawContours(test_image, ptList, 0, cv::Scalar(255, 255, 255), -1, 8, cv::noArray(), INT_MAX);
+
+  double idealMatch(cv_ellipse_num::circleEnergy(test_image, this->P, this->G, this->circleCenter, this->rad, 20));
+
+  std::default_random_engine generator;
+  std::normal_distribution<double> distributionLin(0.0, 1.0);
+  std::normal_distribution<double> distributionRot(0.0, 3.0);
+
+  // make a for loop to test random perturbations.
+  for (int ind(0); ind < 1000; ind++)
+  {
+    cv::Mat G_bad = this->G.clone();
     // create the perturbations:
     // Rotation perturbation:
     double xOff(distributionLin(generator));
@@ -394,27 +131,288 @@ TEST_F(ellipseMatchingTest, testEllipseMatchingDerivativeConverge)
 
     cv_rot::Quaternion normedQ(QuatNormalize(qua_rotation));
 
-    Mat rot = cv_rot::QuatToMatrix(normedQ);
-
-
-    cv_rot::Quaternion result(cv_rot::MatrixToQuat(rot));
+    cv::Mat rot = cv_rot::QuatToMatrix(normedQ);
 
     rot.copyTo(G_bad.rowRange(0, 3).colRange(0, 3));
 
-    for (int ind(0); ind < 1000; ind++)
-    {
+    double perturbMatch(cv_ellipse_num::circleEnergy(test_image, this->P, G_bad, this->circleCenter, this->rad, 20));
+    ASSERT_TRUE(perturbMatch < idealMatch);
+  }
+}
 
-        Mat jacTemp;
-        double perturbMatch(
-            cv_ellipse_num::circleEnergy(test_image, this->P, G_bad, this->circleCenter, this->rad, 20, jacTemp));
-        if ((ind % 50 ) == 0)
-        {
-            std::cout << jacTemp << std::endl;
-            std::cout << perturbMatch << "\n";
-        }
-        // use the new 
-        ASSERT_TRUE(perturbMatch < idealMatch);
+TEST_F(ellipseMatchingTest, testEllipseMatchingSmallResults)
+{
+  // Import image
+
+  // 1. create an ellipse image:
+  // create the image:
+  cv::Mat test_image(200, 200, CV_8UC1);
+  test_image.setTo(0);
+
+  // project the base circle:
+  std::vector< std::vector<cv::Point> > ptList;
+  ptList.resize(1);
+  ptList[0].clear();
+  cv::Rect circleRect(cv_ellipse_num::projectCirclePoints(ptList[0], this->P, this->G,
+    this->circleCenter, this->rad, 20));
+  drawContours(test_image, ptList, 0, cv::Scalar(255, 255, 255), -1, 8, cv::noArray(), INT_MAX);
+
+  double idealMatch(cv_ellipse_num::circleEnergy(test_image, this->P, this->G, this->circleCenter, this->rad, 20));
+
+  std::default_random_engine generator;
+  std::normal_distribution<double> distributionLin(0.0, 0.025);
+  std::normal_distribution<double> distributionRot(0.0, 0.3);
+
+  // make a for loop to test random perturbations.
+  for (int ind(0); ind < 100000; ind++)
+  {
+    cv::Mat G_bad = this->G.clone();
+    // create the perturbations:
+    // Rotation perturbation:
+    double xOff(distributionLin(generator));
+    double yOff(distributionLin(generator));
+    double zOff(distributionLin(generator));
+
+    double qX(distributionLin(generator));
+    double qY(distributionLin(generator));
+    double qZ(distributionLin(generator));
+    double ang(distributionRot(generator));
+
+    G_bad.at<double> (0, 3) = xOff;
+    G_bad.at<double> (1, 3) = yOff;
+    G_bad.at<double> (2, 3) = zOff;
+
+    cv_rot::Quaternion qua_rotation;
+    qua_rotation.data[0] = cos(ang/2);
+    qua_rotation.data[1] = sin(ang/2)*qX;
+    qua_rotation.data[2] = sin(ang/2)*qY;
+    qua_rotation.data[3] = sin(ang/2)*qZ;
+
+
+    cv_rot::Quaternion normedQ(QuatNormalize(qua_rotation));
+
+    cv::Mat rot = cv_rot::QuatToMatrix(normedQ);
+
+    rot.copyTo(G_bad.rowRange(0, 3).colRange(0, 3));
+
+    double perturbMatch(cv_ellipse_num::circleEnergy(test_image, this->P, G_bad, this->circleCenter, this->rad, 20));
+    ASSERT_TRUE(perturbMatch <= idealMatch);
+  }
+}
+
+// @TODO Make a unit test for identifying the optimal location of a circle.
+// include a numerical based derivative estimation.
+
+
+TEST_F(ellipseMatchingTest, testMultipleEllipseMatchingResults)
+{
+// Import image
+// @TODO: finish this for a vector of ellipses
+// 1. create an ellipse image:
+// create the image:
+cv::Mat test_image(200, 200, CV_8UC1);
+test_image.setTo(0);
+
+// project the base circle:
+std::vector< std::vector<cv::Point> > ptList;
+ptList.resize(1);
+ptList[0].clear();
+cv::Rect circleRect(cv_ellipse_num::projectCirclePoints(ptList[0], this->P,
+  this->G, this->circleCenter, this->rad, 20));
+drawContours(test_image, ptList, 0, cv::Scalar(255, 255, 255), -1, 8, cv::noArray(), INT_MAX);
+
+double idealMatch(cv_ellipse_num::circleEnergy(test_image, this->P, this->G, this->circleCenter, this->rad, 20));
+
+std::default_random_engine generator;
+std::normal_distribution<double> distributionLin(0.0, 0.025);
+std::normal_distribution<double> distributionRot(0.0, 0.3);
+
+// make a for loop to test random perturbations.
+for (int ind(0); ind < 1000; ind++)
+{
+cv::Mat G_bad = this->G.clone();
+// create the perturbations:
+// Rotation perturbation:
+double xOff(distributionLin(generator));
+double yOff(distributionLin(generator));
+double zOff(distributionLin(generator));
+
+double qX(distributionLin(generator));
+double qY(distributionLin(generator));
+double qZ(distributionLin(generator));
+double ang(distributionRot(generator));
+
+G_bad.at<double> (0, 3) = xOff;
+G_bad.at<double> (1, 3) = yOff;
+G_bad.at<double> (2, 3) = zOff;
+
+cv_rot::Quaternion qua_rotation;
+qua_rotation.data[0] = cos(ang/2);
+qua_rotation.data[1] = sin(ang/2)*qX;
+qua_rotation.data[2] = sin(ang/2)*qY;
+qua_rotation.data[3] = sin(ang/2)*qZ;
+
+
+cv_rot::Quaternion normedQ(QuatNormalize(qua_rotation));
+
+cv::Mat rot = cv_rot::QuatToMatrix(normedQ);
+
+rot.copyTo(G_bad.rowRange(0, 3).colRange(0, 3));
+
+double perturbMatch(cv_ellipse_num::circleEnergy(test_image, this->P, G_bad, this->circleCenter, this->rad, 20));
+ASSERT_TRUE(perturbMatch <= idealMatch);
+}
+}
+
+
+TEST_F(ellipseMatchingTest, testEllipseMatchingDerivative)
+{
+// Import image
+
+// 1. create an ellipse image:
+// create the image:
+cv::Mat test_image(200, 200, CV_8UC1);
+test_image.setTo(0);
+
+// project the base circle:
+std::vector< std::vector<cv::Point> > ptList;
+ptList.resize(1);
+ptList[0].clear();
+cv::Rect circleRect(
+  cv_ellipse_num::projectCirclePoints(ptList[0], this->P, this->G, this->circleCenter, this->rad, 20));
+drawContours(test_image, ptList, 0, cv::Scalar(255, 255, 255), -1, 8, cv::noArray(), INT_MAX);
+
+// test the derivative
+cv::Mat jac;
+double idealMatch(cv_ellipse_num::circleEnergy(
+  test_image, this->P, this->G, this->circleCenter, this->rad, 20, jac));
+
+std::cout << jac << std::endl;
+
+std::default_random_engine generator;
+std::normal_distribution<double> distributionLin(0.0, 0.015);
+std::normal_distribution<double> distributionRot(0.0, 0.075);
+
+
+// make a for loop to test random perturbations.
+for (int ind(0); ind < 1000; ind++)
+{
+cv::Mat G_bad = this->G.clone();
+// create the perturbations:
+// Rotation perturbation:
+double xOff(distributionLin(generator));
+double yOff(distributionLin(generator));
+double zOff(distributionLin(generator));
+
+double qX(distributionLin(generator));
+double qY(distributionLin(generator));
+double qZ(distributionLin(generator));
+double ang(distributionRot(generator));
+
+G_bad.at<double> (0, 3) = xOff;
+G_bad.at<double> (1, 3) = yOff;
+G_bad.at<double> (2, 3) = zOff;
+
+cv_rot::Quaternion qua_rotation;
+qua_rotation.data[0] = cos(ang/2);
+qua_rotation.data[1] = sin(ang/2)*qX;
+qua_rotation.data[2] = sin(ang/2)*qY;
+qua_rotation.data[3] = sin(ang/2)*qZ;
+
+
+cv_rot::Quaternion normedQ(QuatNormalize(qua_rotation));
+
+cv::Mat rot = cv_rot::QuatToMatrix(normedQ);
+
+rot.copyTo(G_bad.rowRange(0, 3).colRange(0, 3));
+
+cv::Mat jacTemp;
+double perturbMatch(
+  cv_ellipse_num::circleEnergy(test_image, this->P, G_bad, this->circleCenter, this->rad, 20, jacTemp));
+if ((ind % 50 ) == 0)
+{
+std::cout << jacTemp << std::endl;
+std::cout << perturbMatch << "\n";
+}
+ASSERT_TRUE(perturbMatch < idealMatch);
+}
+}
+
+TEST_F(ellipseMatchingTest, testEllipseMatchingDerivativeConverge)
+{
+  // Import image
+
+  // 1. create an ellipse image:
+  // create the image:
+  cv::Mat test_image(200, 200, CV_8UC1);
+  test_image.setTo(0);
+
+  // project the base circle:
+  std::vector< std::vector<cv::Point> > ptList;
+  ptList.resize(1);
+  ptList[0].clear();
+  cv::Rect circleRect(
+    cv_ellipse_num::projectCirclePoints(ptList[0], this->P, this->G, this->circleCenter, this->rad, 20));
+  drawContours(test_image, ptList, 0, cv::Scalar(255, 255, 255), -1, 8, cv::noArray(), INT_MAX);
+
+  // test the derivative
+  cv::Mat jac;
+  double idealMatch(cv_ellipse_num::circleEnergy(
+    test_image, this->P, this->G, this->circleCenter, this->rad, 20, jac));
+
+  std::cout << jac << std::endl;
+
+  std::default_random_engine generator;
+  std::normal_distribution<double> distributionLin(0.0, 0.015);
+  std::normal_distribution<double> distributionRot(0.0, 0.075);
+
+
+  // make a for loop to test random perturbations.
+
+  cv::Mat G_bad = this->G.clone();
+  // create the perturbations:
+  // Rotation perturbation:
+  double xOff(distributionLin(generator));
+  double yOff(distributionLin(generator));
+  double zOff(distributionLin(generator));
+
+  double qX(distributionLin(generator));
+  double qY(distributionLin(generator));
+  double qZ(distributionLin(generator));
+  double ang(distributionRot(generator));
+
+  G_bad.at<double> (0, 3) = xOff;
+  G_bad.at<double> (1, 3) = yOff;
+  G_bad.at<double> (2, 3) = zOff;
+
+  cv_rot::Quaternion qua_rotation;
+  qua_rotation.data[0] = cos(ang/2);
+  qua_rotation.data[1] = sin(ang/2)*qX;
+  qua_rotation.data[2] = sin(ang/2)*qY;
+  qua_rotation.data[3] = sin(ang/2)*qZ;
+
+
+  cv_rot::Quaternion normedQ(QuatNormalize(qua_rotation));
+
+  cv::Mat rot = cv_rot::QuatToMatrix(normedQ);
+
+
+  cv_rot::Quaternion result(cv_rot::MatrixToQuat(rot));
+
+  rot.copyTo(G_bad.rowRange(0, 3).colRange(0, 3));
+
+  for (int ind(0); ind < 1000; ind++)
+  {
+    cv::Mat jacTemp;
+    double perturbMatch(
+      cv_ellipse_num::circleEnergy(test_image, this->P, G_bad, this->circleCenter, this->rad, 20, jacTemp));
+    if ((ind % 50 ) == 0)
+    {
+      std::cout << jacTemp << std::endl;
+      std::cout << perturbMatch << "\n";
     }
+    ASSERT_TRUE(perturbMatch < idealMatch);
+  }
 }
 
 // This test is removed because it relies on visual user feedback.
@@ -431,7 +429,8 @@ TEST_F(ellipseMatchingTest, testEllipseMatchingImage)
     std::vector< std::vector<Point> > ptList;
     ptList.resize(1);
     ptList[0].clear();
-    cv::Rect circleRect(cv_ellipse_num::projectCirclePoints(ptList[0], this->P, this->G, this->circleCenter, this->rad, 20));
+    cv::Rect circleRect(cv_ellipse_num::projectCirclePoints(ptList[0], this->P, this->G,
+      this->circleCenter, this->rad, 20));
 
     drawContours(test_image, ptList, 0, Scalar(255, 255, 255), -1, 8, noArray(), INT_MAX);
 
@@ -444,7 +443,8 @@ TEST_F(ellipseMatchingTest, testEllipseMatchingImage)
 }
 */
 
-int main(int argc, char** argv) {
-    testing::InitGoogleTest(&argc, argv);
-    return RUN_ALL_TESTS();
+int main(int argc, char** argv)
+{
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

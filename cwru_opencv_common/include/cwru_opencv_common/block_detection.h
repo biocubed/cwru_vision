@@ -35,10 +35,10 @@
  *
  */
 
+#ifndef CWRU_OPENCV_COMMON_BLOCK_DETECTION_H
+#define CWRU_OPENCV_COMMON_BLOCK_DETECTION_H
 
-#ifndef BLOCKDETECTION_H
-#define BLOCKDETECTION_H
-
+#include <vector>
 #include <opencv2/core/core.hpp>
 #include <opencv2/opencv.hpp>
 #include "cwru_opencv_common/opencv_local.h"
@@ -52,8 +52,7 @@
  * @param std::vector<cv::Point2f> &corners: The output of the 4 corners (output by ref)
  * @param bool display: display the results of the detection.
  */
-void detectBlock(const cv::Mat &, cv::Point, std::vector<cv::Point2f> &, bool=false);
-
+void detectBlock(const cv::Mat &, cv::Point, std::vector<cv::Point2f> &, bool = false);
 
 /** \brief refineBlock refines a detected quadrilateral (in an image).
  *
@@ -62,8 +61,7 @@ void detectBlock(const cv::Mat &, cv::Point, std::vector<cv::Point2f> &, bool=fa
  * This param must be pre initialized.
  * @param bool display: display the results of the refinement.
  */
-int refineBlock(const cv::Mat&, std::vector<cv::Point2f> &, bool=false);
-
+int refineBlock(const cv::Mat&, std::vector<cv::Point2f> &, bool = false);
 
 /** \brief sortPtGrid sorts the point array into a grid. (won't work that well).
  *
@@ -73,7 +71,6 @@ int refineBlock(const cv::Mat&, std::vector<cv::Point2f> &, bool=false);
  */
 void sortPtGrid(std::vector<cv::Point2f> &, const cv::Size &, bool = true);
 
-
 /** \brief exportPointFile(const char*,std::vector<std::vector<Point3f>> &) 
  *         save the point array of arrays.
  *
@@ -82,5 +79,4 @@ void sortPtGrid(std::vector<cv::Point2f> &, const cv::Size &, bool = true);
  */
 void exportPointFile(const char*, const std::vector< std::vector< cv::Point3f > > &);
 
-
-#endif
+#endif  // CWRU_OPENCV_COMMON_BLOCK_DETECTION_H
