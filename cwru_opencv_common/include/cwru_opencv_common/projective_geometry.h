@@ -76,6 +76,9 @@ private:
     ros::Subscriber subR;
 };
 
+
+void printDifferentialMatrix(const cv::Mat& P_l, const cv::Mat& P_r, double depth = 0.10);
+
 /** 
  * @brief reprojectPoint Projects a point in 3d coords to a point in a camera image.
  *

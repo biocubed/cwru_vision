@@ -116,6 +116,12 @@ target_link_libraries(projective_lib
    ${catkin_LIBRARIES}
  )
 
+add_executable(camera_accuracy node/camera_accuracy_estimation.cpp)
+
+target_link_libraries(
+  camera_accuracy
+  projective_lib
+)
 
 ADD_EXECUTABLE(manual_labeling node/manual_labeling_node.cpp)
 
@@ -124,6 +130,7 @@ TARGET_LINK_LIBRARIES(manual_labeling
     ${OpenCV_LIBRARIES}
     ${catkin_LIBRARIES}
 )
+
 
 
 
