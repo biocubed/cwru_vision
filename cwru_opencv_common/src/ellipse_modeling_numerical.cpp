@@ -34,9 +34,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <vector>
 #include "cwru_opencv_common/projective_geometry.h"
 #include "cwru_opencv_common/ellipse_modeling_numerical.h"
-
 
 using namespace cv_local;
 
@@ -46,11 +46,12 @@ namespace cv_ellipse_num
 double circleEnergy(const cv::Mat &segmentedImage, const cv::Mat &P, const cv::Mat &G_co,
   const cv::Point3d &center, double rad, int segments, cv::OutputArray jac)
 {
-  // The circle energy is maximizd when the segmented image is dark where the circle is dark and the gradient around image
+  // The circle energy is maximized
+  // when the segmented image is dark where the circle is dark and the gradient around image
   // matches the circle's edge.
   cv::Mat pt_o(4, 1, CV_64FC1);
 
-  //create the cirlcle
+  // create the circle
   std::vector< std::vector<cv::Point> > imagePts;
   imagePts.clear();
   imagePts.resize(1);
@@ -71,28 +72,28 @@ double circleEnergy(const cv::Mat &segmentedImage, const cv::Mat &P, const cv::M
     }
   }
 
-  if (finalROI.br().x >= segmentedImage.size().width) 
+  if (finalROI.br().x >= segmentedImage.size().width)
   {
-    finalROI.width = (segmentedImage.size().width - 1 - finalROI.x); 
+    finalROI.width = (segmentedImage.size().width - 1 - finalROI.x);
     if (finalROI.width <= 0)
     {
       return -1.0;
     }
   }
-  
-  if (finalROI.tl().y <= 0) 
+
+  if (finalROI.tl().y <= 0)
   {
     finalROI.height -= (1-finalROI.y);
     finalROI.y = 1;
     if (finalROI.height <= 0)
     {
       return -1.0;
-    } 
+    }
   }
 
-  if (finalROI.br().y >= segmentedImage.size().height) 
+  if (finalROI.br().y >= segmentedImage.size().height)
   {
-    finalROI.height = (segmentedImage.size().height - 1 - finalROI.y); 
+    finalROI.height = (segmentedImage.size().height - 1 - finalROI.y);
     if (finalROI.height <= 0)
     {
       return -1.0;
@@ -101,7 +102,7 @@ double circleEnergy(const cv::Mat &segmentedImage, const cv::Mat &P, const cv::M
 
   if (finalROI.area() <= 0)
   {
-    //error return
+    // error return
     return -1.0;
   }
 
@@ -118,32 +119,29 @@ double circleEnergy(const cv::Mat &segmentedImage, const cv::Mat &P, const cv::M
   {
     finalROI -= cv::Point(1, 1);
     finalROI += cv::Size(2, 2);
-    if (finalROI.tl().x < 0 || finalROI.tl().y < 0 || finalROI.br().x > segmentedImage.size().width || finalROI.br().y > segmentedImage.size().height)
+    if (finalROI.tl().x < 0 || finalROI.tl().y < 0 || finalROI.br().x > segmentedImage.size().width
+      || finalROI.br().y > segmentedImage.size().height)
     {
       std::cout << finalROI << std::endl;
       return 0;
     }
-    
   }
-
   cv::Mat subImage(segmentedImage(finalROI));
-  
   cv::Mat subImagef;
+  subImage.convertTo(subImagef, CV_32F);
 
-  subImage.convertTo(subImagef,CV_32F);
-  
   // make derivative magnitude images.
   cv::Mat derivX, derivY;
-  
+
   cv::Scharr(subImage, derivX, CV_32F, 1, 0);
   cv::Scharr(subImage, derivY, CV_32F, 0, 1);
 
   cv::Mat dMagS(derivX.mul(derivX)+derivY.mul(derivY));
   cv::Mat dMag;
   cv::sqrt(dMagS, dMag);
-  
+
   // use cross correlation for the fill match, as well as the edge match.
-  // Note: there are several different matching methods: 
+  // Note: there are several different matching methods:
   // http://docs.opencv.org/2.4/modules/imgproc/doc/object_detection.html?highlight=matchtemplate#matchtemplate
   // edge image:
   cv::Mat edgeMatch;
@@ -155,20 +153,19 @@ double circleEnergy(const cv::Mat &segmentedImage, const cv::Mat &P, const cv::M
 
   float energy(0.0);
   // compute the rms energy:
-  if ( jac.needed() )
+  if (jac.needed())
   {
-    //std::cout << edgeMatch.size() << std::endl;
-    energy = edgeMatch.at<float>(1, 1)*edgeMatch.at<float>(1, 1) 
+    // std::cout << edgeMatch.size() << std::endl;
+    energy = edgeMatch.at<float>(1, 1)*edgeMatch.at<float>(1, 1)
       + fillMatch.at<float>(1, 1)*fillMatch.at<float>(1, 1);
   }
   else
   {
-    
-    //std::cout << edgeMatch.size() << std::endl;
-    energy = edgeMatch.at<float>(0,0)*edgeMatch.at<float>(0,0) + fillMatch.at<float>(0,0)*fillMatch.at<float>(0,0);
+    // std::cout << edgeMatch.size() << std::endl;
+    energy = edgeMatch.at<float>(0, 0)*edgeMatch.at<float>(0, 0) + fillMatch.at<float>(0, 0)*fillMatch.at<float>(0, 0);
   }
 
-  if ( jac.needed() )
+  if (jac.needed())
   {
     // compute the derivative of the match w.r.t x and y
     cv::Mat edgeDx, edgeDy;
@@ -180,22 +177,22 @@ double circleEnergy(const cv::Mat &segmentedImage, const cv::Mat &P, const cv::M
     cv::Scharr(fillMatch, fillDy, CV_32F, 0, 1);
 
     // derivative w.r.t the actual circle center.
-    cv::Mat grad(1,2, CV_64FC1);
-    grad.at<double>(0,0) = static_cast<double> (2*edgeMatch.at<float>(1,1)*edgeDx.at<float>(1,1)
-      + 2*fillMatch.at<float>(1,1)*fillDx.at<float>(1,1));
-    grad.at<double>(0,1) = static_cast<double> (2*edgeMatch.at<float>(1,1)*edgeDy.at<float>(1,1)
-      + 2*fillMatch.at<float>(1,1)*fillDy.at<float>(1,1));
+    cv::Mat grad(1, 2, CV_64FC1);
+    grad.at<double>(0, 0) = static_cast<double> (2*edgeMatch.at<float>(1, 1)*edgeDx.at<float>(1, 1)
+      + 2*fillMatch.at<float>(1, 1)*fillDx.at<float>(1, 1));
+    grad.at<double>(0, 1) = static_cast<double> (2*edgeMatch.at<float>(1, 1)*edgeDy.at<float>(1, 1)
+      + 2*fillMatch.at<float>(1, 1)*fillDy.at<float>(1, 1));
 
     // compute the jacobian w.r.t to G_co (the 6 dof form)
     cv::Mat ptJac, imgPoints;
     cv::Mat spacialPoints(3, 1, CV_64FC1);
-    
+
     spacialPoints.at<double>(0) = center.x;
     spacialPoints.at<double>(1) = center.y;
     spacialPoints.at<double>(2) = center.z;
 
     cv_projective::reprojectPointsSE3(spacialPoints, imgPoints, P, G_co, ptJac);
-    
+
     jac.create(1, 12, CV_64FC1);
     cv::Mat jacMat = jac.getMat();
     cv::Mat resultJac = grad * ptJac;
@@ -207,13 +204,13 @@ double circleEnergy(const cv::Mat &segmentedImage, const cv::Mat &P, const cv::M
 cv::Rect projectCirclePoints(std::vector<cv::Point> & pointList, const cv::Mat &P,
   const cv::Mat &G_co, const cv::Point3d &center, double rad, int segments)
 {
-  // circle points in object frame. 
+  // circle points in object frame.
   cv::Mat pt_o(4, 1, CV_64FC1);
-  //create the cirlcle
+  // create the cirlcle
   pointList.clear();
 
   cv::Rect imageROI(-1, -1, 0, 0);
-  cv::Point oldPt(-1,-1);
+  cv::Point oldPt(-1, -1);
   for (int ind(0); ind < segments; ind++)
   {
     // compute the point:
@@ -221,17 +218,17 @@ cv::Rect projectCirclePoints(std::vector<cv::Point> & pointList, const cv::Mat &
     pt_o.at<double>(1) = sin(2*ind*3.141/segments)*rad+center.y;
     pt_o.at<double>(2) = center.z;
     pt_o.at<double>(3) = 1.0;
-    
+
     cv::Mat pt_c = G_co*pt_o;
     cv::Point3d result;
     result.x = pt_c.at<double>(0);
     result.y = pt_c.at<double>(1);
     result.z = pt_c.at<double>(2);
     cv::Point2d ptLoc(cv_projective::reprojectPoint(result, P));
-    
+
     cv::Point newPt(ptLoc.x, ptLoc.y);
-    
-    if (norm(newPt-oldPt) > 0)  
+
+    if (norm(newPt-oldPt) > 0)
     {
       pointList.push_back(newPt);
       if (imageROI.x > 0)
